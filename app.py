@@ -3,7 +3,7 @@ Free Fire: Combo và Độ nhạy - bản Streamlit.
 
 Cách chạy:
     pip install streamlit anthropic
-    export ANTHROPIC_API_KEY="khóa-api-của-bạn"   # Windows PowerShell: $env:ANTHROPIC_API_KEY="AQ.Ab8RN6KNdbCWRNI3NNYyFEzMvIIBy0XqdF2YuMmUsJ7WvORPYg"
+    export ANTHROPIC_API_KEY="AQ.Ab8RN6KNdbCWRNI3NNYyFEzMvIIBy0XqdF2YuMmUsJ7WvORPYg"   # Windows PowerShell: $env:ANTHROPIC_API_KEY="AQ.Ab8RN6KNdbCWRNI3NNYyFEzMvIIBy0XqdF2YuMmUsJ7WvORPYg"
     streamlit run streamlit_app.py
 
 Hoặc đặt khóa trong file .streamlit/secrets.toml:
