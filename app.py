@@ -3,7 +3,7 @@ Free Fire: Combo và Độ nhạy - bản Streamlit.
 
 Cách chạy:
     pip install streamlit anthropic
-    export ANTHROPIC_API_KEY="AQ.Ab8RN6KNdbCWRNI3NNYyFEzMvIIBy0XqdF2YuMmUsJ7WvORPYg"   # Windows PowerShell: $env:ANTHROPIC_API_KEY="AQ.Ab8RN6KNdbCWRNI3NNYyFEzMvIIBy0XqdF2YuMmUsJ7WvORPYg"
+    export ANTHROPIC_API_KEY="khóa-api-của-bạn"   # Windows PowerShell: $env:ANTHROPIC_API_KEY="khóa-api-của-bạn"
     streamlit run streamlit_app.py
 
 Hoặc đặt khóa trong file .streamlit/secrets.toml:
@@ -11,6 +11,7 @@ Hoặc đặt khóa trong file .streamlit/secrets.toml:
 
 Không dán khóa vào file này và không đưa file chứa khóa lên GitHub.
 Đổi model bằng biến môi trường ANTHROPIC_MODEL nếu cần.
+Để đủ màu giao diện, giữ file .streamlit/config.toml cạnh file này.
 """
 import json
 import os
@@ -19,6 +20,36 @@ import anthropic
 import streamlit as st
 
 st.set_page_config(page_title="Free Fire: Combo và Độ nhạy", page_icon="🔥")
+
+CSS = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Be+Vietnam+Pro:wght@400;600&display=swap');
+.stApp{font-family:'Be Vietnam Pro',sans-serif;background:radial-gradient(1200px 500px at 50% -10%,#5a0a0a 0%,rgba(10,10,12,0) 60%),repeating-linear-gradient(135deg,#0b0b0e 0 14px,#0e0e12 14px 28px)}
+h1,h2,h3,[data-testid="stMetricValue"]{font-family:'Chakra Petch',sans-serif!important}
+.ff-hero{text-align:center;padding:26px 10px 18px;border-bottom:3px solid #ff2b1c;margin-bottom:14px}
+.ff-hero .horns{font-size:2rem;animation:flick 2.2s infinite}
+.ff-hero h1{font-size:clamp(2.6rem,11vw,4.8rem);margin:0;line-height:1;font-weight:700;letter-spacing:2px;background:linear-gradient(180deg,#ffd000 0%,#ff7a00 50%,#ff1a1a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,60,20,.55))}
+.ff-hero p{margin:10px 0 0;color:#ffb3a8;font:600 1rem 'Chakra Petch',sans-serif}
+@keyframes flick{0%,100%{opacity:1}45%{opacity:.75}50%{opacity:1}55%{opacity:.6}}
+.stTabs [data-baseweb="tab-list"]{gap:6px;border-bottom:2px solid #3a0d0d}
+.stTabs [data-baseweb="tab"]{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.05rem;background:#1a0b0d;border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);padding:10px 22px}
+.stTabs [aria-selected="true"]{background:linear-gradient(180deg,#ff3b1c,#b30f0f)!important;color:#fff!important}
+.stTabs [data-baseweb="tab-highlight"]{background:#ffd000!important}
+[data-testid="stVerticalBlockBorderWrapper"]{border:1px solid #5a1212!important;border-left:5px solid #ff3b1c!important;background:linear-gradient(180deg,#160909,#0f0708);box-shadow:0 0 18px rgba(255,40,20,.18);border-radius:4px!important}
+[data-testid="stMetricValue"]{color:#ffb000;font-size:2.4rem!important;text-shadow:0 0 12px rgba(255,120,0,.6)}
+[data-testid="stMetricLabel"]{color:#ff9a8a}
+.stProgress>div>div>div>div{background:linear-gradient(90deg,#ffd000,#ff2b1c)}
+[data-testid="stExpander"]{border:1px solid #5a1212;background:#120708}
+[data-testid="stChatMessage"]{background:#170a0c;border:1px solid #4a1010}
+@media(prefers-reduced-motion:reduce){.ff-hero .horns{animation:none}}
+</style>
+"""
+HERO = """
+<div class="ff-hero"><div class="horns">😈🔥💀🔥😈</div>
+<h1>FREE FIRE</h1>
+<p>Combo hiểm · Độ nhạy chuẩn · Kéo tâm như quỷ</p></div>
+"""
+ICONS = {"rush": "🔥", "rank": "⚔️", "snipe": "🎯", "gloo": "🧱", "def": "🛡️", "speed": "⚡"}
 
 MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5")
 MAX_QUESTIONS = 30  # số câu hỏi tối đa cho mỗi phiên, tránh tốn tiền API
@@ -167,9 +198,9 @@ def stream_answer(msgs, system, key):
 
 
 # ---------------------------------------------------------------- Giao diện
-st.title("🔥 Free Fire: Combo và Độ nhạy")
-st.caption("Chọn combo hợp lối chơi, chỉnh độ nhạy theo đúng máy của bạn.")
-tab1, tab2, tab3 = st.tabs(["Combo nhân vật", "Độ nhạy", "Trợ lý AI"])
+st.markdown(CSS, unsafe_allow_html=True)
+st.markdown(HERO, unsafe_allow_html=True)
+tab1, tab2, tab3 = st.tabs(["😈 Combo quỷ", "🎯 Độ nhạy", "🤖 Trợ lý AI"])
 
 with tab1:
     pick = st.radio("Lối chơi", list(FILTERS), horizontal=True)
@@ -177,7 +208,7 @@ with tab1:
         if FILTERS[pick] and c["t"] != FILTERS[pick]:
             continue
         with st.container(border=True):
-            st.subheader(c["n"])
+            st.subheader(f'{ICONS[c["t"]]} {c["n"]}')
             st.caption("Hợp với: " + c["m"])
             cols = st.columns(2)
             for i, ch in enumerate(c["c"]):
