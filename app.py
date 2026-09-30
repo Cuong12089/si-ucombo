@@ -17,39 +17,104 @@ import json
 import os
 
 import anthropic
+import html as _html
+
 import streamlit as st
+import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Free Fire: Combo và Độ nhạy", page_icon="🔥")
 
 CSS = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700&family=Be+Vietnam+Pro:wght@400;600&display=swap');
-.stApp{font-family:'Be Vietnam Pro',sans-serif;background:radial-gradient(1200px 500px at 50% -10%,#5a0a0a 0%,rgba(10,10,12,0) 60%),repeating-linear-gradient(135deg,#0b0b0e 0 14px,#0e0e12 14px 28px)}
+.stApp{font-family:'Be Vietnam Pro',sans-serif;background:radial-gradient(900px 420px at 15% -5%,rgba(255,40,20,.35),transparent 60%),radial-gradient(800px 400px at 90% 0%,rgba(255,170,0,.18),transparent 60%),#08080a}
+header[data-testid="stHeader"]{background:transparent}
+.block-container{max-width:860px;padding-top:1rem}
 h1,h2,h3,[data-testid="stMetricValue"]{font-family:'Chakra Petch',sans-serif!important}
-.ff-hero{text-align:center;padding:26px 10px 18px;border-bottom:3px solid #ff2b1c;margin-bottom:14px}
-.ff-hero .horns{font-size:2rem;animation:flick 2.2s infinite}
-.ff-hero h1{font-size:clamp(2.6rem,11vw,4.8rem);margin:0;line-height:1;font-weight:700;letter-spacing:2px;background:linear-gradient(180deg,#ffd000 0%,#ff7a00 50%,#ff1a1a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 14px rgba(255,60,20,.55))}
-.ff-hero p{margin:10px 0 0;color:#ffb3a8;font:600 1rem 'Chakra Petch',sans-serif}
+.ff-hero{position:relative;overflow:hidden;text-align:center;padding:34px 14px 26px;margin-bottom:16px;border:1px solid #6a1414;background:linear-gradient(180deg,rgba(90,10,10,.6),rgba(12,8,9,.92));clip-path:polygon(0 0,calc(100% - 26px) 0,100% 26px,100% 100%,26px 100%,0 calc(100% - 26px));box-shadow:0 0 50px rgba(255,50,20,.25) inset}
+.ff-hero .horns{font-size:2.2rem;letter-spacing:6px;animation:flick 2.4s infinite}
+.ff-hero h1{font-size:clamp(2.8rem,12vw,5.2rem);margin:4px 0 0;line-height:1;font-weight:700;letter-spacing:3px;background:linear-gradient(180deg,#fff2a8 0%,#ffd000 30%,#ff7a00 62%,#ff1a1a 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 16px rgba(255,60,20,.6))}
+.ff-hero .tag{margin:10px 0 0;color:#ffb3a8;font:600 1.05rem 'Chakra Petch',sans-serif}
+.ff-badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.ff-badges span{border:1px solid #ff3b1c;background:rgba(255,59,28,.14);color:#ffd9a0;padding:6px 16px;font:700 .85rem 'Chakra Petch',sans-serif;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
+.ff-hero i{position:absolute;bottom:-10px;width:6px;height:6px;border-radius:50%;background:#ffb000;box-shadow:0 0 8px #ff4b00;opacity:0;animation:rise 4s linear infinite}
+@keyframes rise{0%{transform:translateY(0) scale(1);opacity:0}15%{opacity:.9}100%{transform:translateY(-240px) translateX(18px) scale(.3);opacity:0}}
 @keyframes flick{0%,100%{opacity:1}45%{opacity:.75}50%{opacity:1}55%{opacity:.6}}
 .stTabs [data-baseweb="tab-list"]{gap:6px;border-bottom:2px solid #3a0d0d}
-.stTabs [data-baseweb="tab"]{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.05rem;background:#1a0b0d;border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);padding:10px 22px}
-.stTabs [aria-selected="true"]{background:linear-gradient(180deg,#ff3b1c,#b30f0f)!important;color:#fff!important}
+.stTabs [data-baseweb="tab"]{font-family:'Chakra Petch',sans-serif;font-weight:700;font-size:1.08rem;background:#1a0b0d;border-radius:0;clip-path:polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);padding:11px 24px}
+.stTabs [aria-selected="true"]{background:linear-gradient(180deg,#ff3b1c,#a30d0d)!important;color:#fff!important;box-shadow:0 0 18px rgba(255,59,28,.5)}
 .stTabs [data-baseweb="tab-highlight"]{background:#ffd000!important}
-[data-testid="stVerticalBlockBorderWrapper"]{border:1px solid #5a1212!important;border-left:5px solid #ff3b1c!important;background:linear-gradient(180deg,#160909,#0f0708);box-shadow:0 0 18px rgba(255,40,20,.18);border-radius:4px!important}
-[data-testid="stMetricValue"]{color:#ffb000;font-size:2.4rem!important;text-shadow:0 0 12px rgba(255,120,0,.6)}
-[data-testid="stMetricLabel"]{color:#ff9a8a}
-.stProgress>div>div>div>div{background:linear-gradient(90deg,#ffd000,#ff2b1c)}
+[data-testid="stVerticalBlockBorderWrapper"]{border:1px solid #5a1212!important;border-left:5px solid #ff3b1c!important;background:linear-gradient(180deg,#170a0b,#0e0708);box-shadow:0 0 22px rgba(255,40,20,.2);border-radius:2px!important}
+[data-baseweb="select"]>div{background:#1a0b0d!important;border:1px solid #5a1212!important}
+div[role="radiogroup"] label{background:#1a0b0d;border:1px solid #4a1010;padding:4px 12px;margin-right:6px}
 [data-testid="stExpander"]{border:1px solid #5a1212;background:#120708}
+[data-testid="stExpander"] summary{font-family:'Chakra Petch',sans-serif;font-weight:700;color:#ffb000}
 [data-testid="stChatMessage"]{background:#170a0c;border:1px solid #4a1010}
-@media(prefers-reduced-motion:reduce){.ff-hero .horns{animation:none}}
+pre{background:#120708!important;border:1px dashed #6a1414}
+.roster{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:8px 0 4px}
+.ch{display:flex;gap:10px;padding:10px;background:linear-gradient(135deg,#1d0c0e,#120809);border:1px solid #4a1010;border-left:3px solid #ff3b1c}
+.ch.act{border-left-color:#ffd000;box-shadow:0 0 14px rgba(255,208,0,.2)}
+.ch b{flex:none;width:38px;height:38px;display:grid;place-items:center;font:700 1.2rem 'Chakra Petch',sans-serif;color:#140606;background:linear-gradient(135deg,#ffd000,#ff6a00)}
+.ch .r{font:700 .72rem 'Chakra Petch',sans-serif;color:#ff8a70}
+.ch.act .r{color:#ffd000}
+.ch strong{font-family:'Chakra Petch',sans-serif;font-size:1.05rem;display:block}
+.ch em{font-style:normal;color:#ffb98f;font-size:.82rem}
+.ch span{display:block;font-size:.83rem;color:#c9b6b0;margin-top:2px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:10px 0}
+.tile{padding:12px 14px;background:linear-gradient(160deg,#1f0b0d,#0f0708);border:1px solid #5a1212;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.tile small{color:#ff9a8a;font-weight:600}
+.tile .n{font:700 2.8rem/1.05 'Chakra Petch',sans-serif;background:linear-gradient(180deg,#ffe066,#ff6a00);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(255,100,0,.5))}
+.bar{height:8px;margin-top:6px;background:repeating-linear-gradient(90deg,#3a1414 0 3px,transparent 3px 8px)}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(90deg,#ffb000 0 3px,transparent 3px 8px)}
+@media(prefers-reduced-motion:reduce){.ff-hero .horns,.ff-hero i{animation:none}}
 </style>
 """
 HERO = """
-<div class="ff-hero"><div class="horns">😈🔥💀🔥😈</div>
+<div class="ff-hero">{embers}<div class="horns">😈🔥💀🔥😈</div>
 <h1>FREE FIRE</h1>
-<p>Combo hiểm · Độ nhạy chuẩn · Kéo tâm như quỷ</p></div>
+<div class="tag">Combo hiểm · Độ nhạy chuẩn · Kéo tâm như quỷ</div>
+<div class="ff-badges"><span>{nc} combo</span><span>{nm} dòng máy</span><span>Trợ lý AI</span></div></div>
 """
+EMBERS = "".join(
+    f'<i style="left:{l}%;animation-delay:{d}s;animation-duration:{t}s"></i>'
+    for l, d, t in [(6, 0, 4), (16, 1.2, 3.6), (28, 2.4, 4.4), (40, .6, 3.8), (52, 1.8, 4.2),
+                    (64, 3, 3.6), (76, .3, 4.6), (88, 2.1, 4), (95, 1.5, 3.4)]
+)
 ICONS = {"rush": "🔥", "rank": "⚔️", "snipe": "🎯", "gloo": "🧱", "def": "🛡️", "speed": "⚡"}
+
+# Nhạc chiến tự soạn, tạo bằng Web Audio ngay trong trình duyệt (không dùng nhạc có bản quyền).
+MUSIC = """
+<style>
+body{margin:0;font-family:system-ui,sans-serif;color:#ffd9a0}
+.p{display:flex;align-items:center;gap:12px;padding:10px 14px;background:linear-gradient(90deg,#2a0909,#120708);border:1px solid #6a1414;border-left:5px solid #ff3b1c}
+button{cursor:pointer;border:0;padding:10px 18px;font-weight:700;color:#140606;background:linear-gradient(135deg,#ffd000,#ff6a00)}
+input{accent-color:#ff3b1c;flex:1}
+span{font-size:.85rem;white-space:nowrap}
+</style>
+<div class="p"><button id="b">🔊 Bật nhạc chiến</button><input id="v" type="range" min="0" max="100" value="45"><span id="s">Đang tắt</span></div>
+<script>
+var ctx,master,timer,on=false,step=0,next=0,bpm=140,spb=60/140/4,roots=[45,43,41,40];
+var bp=[1,0,0,1,0,1,0,0,1,0,0,1,0,1,1,0],arp=[0,3,7,12,7,3,0,3];
+function f(m){return 440*Math.pow(2,(m-69)/12)}
+function tone(t,m,ty,g,d){var o=ctx.createOscillator(),v=ctx.createGain();o.type=ty;o.frequency.value=f(m);v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(v);v.connect(master);o.start(t);o.stop(t+d+.02)}
+function kick(t){var o=ctx.createOscillator(),v=ctx.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.12);v.gain.setValueAtTime(.9,t);v.gain.exponentialRampToValueAtTime(.0001,t+.2);o.connect(v);v.connect(master);o.start(t);o.stop(t+.22)}
+function noise(t,g,d,hp){var n=ctx.sampleRate*d,b=ctx.createBuffer(1,n,ctx.sampleRate),a=b.getChannelData(0);for(var i=0;i<n;i++)a[i]=Math.random()*2-1;var s=ctx.createBufferSource(),fl=ctx.createBiquadFilter(),v=ctx.createGain();s.buffer=b;fl.type="highpass";fl.frequency.value=hp;v.gain.setValueAtTime(g,t);v.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(fl);fl.connect(v);v.connect(master);s.start(t)}
+function play(i,t){var bar=Math.floor(i/16)%4,k=i%16,r=roots[bar];
+ if(k%4==0)kick(t);
+ if(k==4||k==12)noise(t,.5,.15,1500);
+ if(k%2==1)noise(t,.12,.04,7000);
+ if(bp[k])tone(t,r,"sawtooth",.28,spb*1.8);
+ if(k%2==0)tone(t,r+24+arp[(k/2)%8],"square",.07,spb*1.6);
+ if(k==0&&bar%2==0)tone(t,r+36,"triangle",.1,spb*10)}
+function sched(){while(next<ctx.currentTime+.25){play(step,next);next+=spb;step=(step+1)%64}}
+document.getElementById("b").onclick=function(){
+ if(!ctx){ctx=new (window.AudioContext||window.webkitAudioContext)();master=ctx.createGain();master.gain.value=.45*.5;master.connect(ctx.destination)}
+ on=!on;
+ if(on){ctx.resume();next=ctx.currentTime+.05;step=0;timer=setInterval(sched,50);this.textContent="⏸ Tắt nhạc";document.getElementById("s").textContent="Đang phát"}
+ else{clearInterval(timer);ctx.suspend();this.textContent="🔊 Bật nhạc chiến";document.getElementById("s").textContent="Đang tắt"}};
+document.getElementById("v").oninput=function(){if(master)master.gain.value=this.value/100*.5};
+</script>
+"""
 
 MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5-5")
 MAX_QUESTIONS = 30  # số câu hỏi tối đa cho mỗi phiên, tránh tốn tiền API
@@ -199,7 +264,17 @@ def stream_answer(msgs, system, key):
 
 # ---------------------------------------------------------------- Giao diện
 st.markdown(CSS, unsafe_allow_html=True)
-st.markdown(HERO, unsafe_allow_html=True)
+st.markdown(HERO.format(embers=EMBERS, nc=len(COMBOS), nm=len(MODELS)), unsafe_allow_html=True)
+components.html(MUSIC, height=64)
+with st.expander("🎵 Dùng nhạc của bạn"):
+    st.caption("Nhạc chính thức của Free Fire thuộc bản quyền Garena nên app không kèm sẵn. "
+               "Bạn có thể tải lên file nhạc mà bạn có quyền sử dụng, đặc biệt nếu đưa app lên mạng.")
+    up = st.file_uploader("Chọn file nhạc (mp3, wav, ogg)", type=["mp3", "wav", "ogg"])
+    if up:
+        try:
+            st.audio(up, loop=True)
+        except TypeError:
+            st.audio(up)
 tab1, tab2, tab3 = st.tabs(["😈 Combo quỷ", "🎯 Độ nhạy", "🤖 Trợ lý AI"])
 
 with tab1:
@@ -210,11 +285,14 @@ with tab1:
         with st.container(border=True):
             st.subheader(f'{ICONS[c["t"]]} {c["n"]}')
             st.caption("Hợp với: " + c["m"])
-            cols = st.columns(2)
+            tiles = ""
             for i, ch in enumerate(c["c"]):
                 skill, desc = CHARS[ch]
-                role = "Chủ động" if i == 0 else "Bị động"
-                cols[i % 2].markdown(f"**{ch}** · {role} · *{skill}*  \n{desc}")
+                role = "CHỦ ĐỘNG" if i == 0 else "Bị động"
+                tiles += (f'<div class="ch{" act" if i == 0 else ""}"><b>{_html.escape(ch[0])}</b><div>'
+                          f'<div class="r">{role}</div><strong>{_html.escape(ch)}</strong>'
+                          f'<em>{_html.escape(skill)}</em><span>{_html.escape(desc)}</span></div></div>')
+            st.markdown(f'<div class="roster">{tiles}</div>', unsafe_allow_html=True)
             with st.expander("Cách chơi chi tiết"):
                 st.markdown(f"**Cách chơi:** {c['how']}")
                 st.markdown(f"**Điểm mạnh:** {c['good']}")
@@ -241,11 +319,10 @@ with tab2:
             f"(máy {DEVS[dev][1]:+d}, tần số quét {HZS[hz][1]:+d}, chỉnh tay {manual:+d}).")
 
     values = [max(0, min(100, v + total)) for v in PRESETS[style]]
-    cols = st.columns(3)
-    for i, (name, v) in enumerate(zip(NAMES, values)):
-        with cols[i % 3]:
-            st.metric(name, v)
-            st.progress(v / 100)
+    st.markdown('<div class="tiles">' + "".join(
+        f'<div class="tile"><small>{n}</small><div class="n">{v}</div>'
+        f'<div class="bar"><i style="width:{v}%"></i></div></div>'
+        for n, v in zip(NAMES, values)) + '</div>', unsafe_allow_html=True)
     st.caption("Bấm biểu tượng sao chép ở góc khung bên dưới để lấy bộ số:")
     st.code("\n".join(f"{n}: {v}" for n, v in zip(NAMES, values)), language=None)
 
